@@ -11,6 +11,9 @@ public class Interpreter {
     private final InterpreterState interpreterState;
 
     public Interpreter(InterpreterState interpreterState, Command[] commands) {
+        if (interpreterState == null || commands == null) {
+            throw new IllegalArgumentException("Argument is null");
+        }
         this.interpreterState = interpreterState;
         this.commands = new HashMap<>();
         for (Command command : commands) {

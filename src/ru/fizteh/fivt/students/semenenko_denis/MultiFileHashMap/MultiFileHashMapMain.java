@@ -103,10 +103,10 @@ public class MultiFileHashMapMain {
                         try {
                             database.useTable(name);
                             System.out.println("using " + name);
-                        } catch (IllegalArgumentException e) {
-                            System.out.println(name + " not exists");
-                        } catch (TableNotFoundException e) {
-                            System.out.println(name + " not exists");
+                        } catch (IllegalArgumentException | TableNotFoundException e) {
+                            System.out.println(e.getMessage());
+                        } catch (UncommitedChangesException e) {
+                            System.out.println(e.getMessage());
                         } catch (DatabaseFileStructureException | LoadOrSaveException e) {
                             System.err.println(e.getMessage());
                         }
@@ -121,7 +121,7 @@ public class MultiFileHashMapMain {
                         try {
                             database.removeTable(name);
                             System.out.println("dropped");
-                        } catch (TableNotFoundException ex) {
+                        } catch (IllegalArgumentException e) {
                             System.out.println(name + " not exists");
                         } catch (DatabaseFileStructureException | LoadOrSaveException e) {
                             System.err.println(e.getMessage());
@@ -138,7 +138,8 @@ public class MultiFileHashMapMain {
                             System.out.println("created");
                         } catch (TableAlreadyExistsException e) {
                             System.out.println(name + " exists");
-                        } catch (DatabaseFileStructureException | LoadOrSaveException e) {
+                        } catch (DatabaseFileStructureException
+                                | LoadOrSaveException | IllegalArgumentException e) {
                             System.err.println(e.getMessage());
                         }
                     }
@@ -202,8 +203,16 @@ public class MultiFileHashMapMain {
                     @Override
                     public void accept(InterpreterState interpreterState, String[] arguments) {
                         DatabaseInterpreterState state = (DatabaseInterpreterState) interpreterState;
-                        state.tryToSave();
-                        state.exit();
+                        Database database = state.getDatabase();
+                        TableHash usingTable = (TableHash)database.getUsingTable();
+                        if (usingTable != null
+                                && usingTable.getNumberOfUncommitedChanges() != 0) {
+                            int uncommited = usingTable.getNumberOfUncommitedChanges();
+                            System.out.println(uncommited + " unsaved changes");
+                        } else {
+                            state.tryToSave();
+                            state.exit();
+                        }
                     }
                 })
         }).run(args);

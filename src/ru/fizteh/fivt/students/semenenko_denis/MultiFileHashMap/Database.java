@@ -6,10 +6,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import javafx.util.Pair;
 import ru.fizteh.fivt.storage.strings.Table;
@@ -97,17 +94,28 @@ public class Database implements TableProvider {
     }
 
     public void useTable(String name) {
-        if (usingTable != null) {
-            ((TableHash) usingTable).save();
+        if (name == null) {
+            throw new IllegalArgumentException("Name is null");
+        }
+        if (getTable(name) == null) {
+            throw new IllegalArgumentException("Table not exist");
+        }
+        if (usingTable != null
+                && ((TableHash)usingTable).getNumberOfUncommitedChanges() != 0) {
+            int uncommited = ((TableHash)usingTable).getNumberOfUncommitedChanges();
+            throw new UncommitedChangesException(uncommited + " unsaved changes");
         }
         setUsingTable(name);
     }
 
     @Override
     public Table getTable(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Name is null");
+        }
         Table table = tableNames.get(name);
         if (table == null) {
-            throw new IllegalArgumentException("Table not exists.");
+            return null;
         } else {
             return table;
         }
@@ -115,6 +123,9 @@ public class Database implements TableProvider {
 
     @Override
     public Table createTable(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Name is null");
+        }
         try {
             if (!containsTable(name)) {
                 TableHash table = new TableHash(name, this);
@@ -126,7 +137,7 @@ public class Database implements TableProvider {
                     tableNames.put(name, table);
                     return table;
                 } else {
-                    throw new DatabaseFileStructureException(INCORRECT_NAME_OF_TABLES);
+                    return null;
                 }
             } else {
                 return null;
@@ -134,10 +145,9 @@ public class Database implements TableProvider {
         } catch (UnsupportedOperationException e) {
             throw new LoadOrSaveException(CANT_CREATE_TABLE_MESSAGE, e);
         } catch (FileAlreadyExistsException e) {
-            throw new DatabaseFileStructureException(CANT_CREATE_TABLE + ", directory already exists", e);
+            return null;
         } catch (InvalidPathException e) {
-            throw new DatabaseFileStructureException(
-                    CANT_CREATE_TABLE + ", directory name makes it impossible to create a directory", e);
+            return null;
         } catch (IOException | SecurityException e) {
             throw new LoadOrSaveException(CANT_CREATE_TABLE_MESSAGE, e);
         }
@@ -145,9 +155,15 @@ public class Database implements TableProvider {
 
     @Override
     public void removeTable(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Name is null");
+        }
         TableHash table = (TableHash) getTable(name);
         if (table == usingTable) {
             usingTable = null;
+        }
+        if (table == null) {
+            throw new IllegalArgumentException("Table not exist");
         }
         table.drop();
         tables.remove(table);
