@@ -101,8 +101,8 @@ public class Database implements TableProvider {
             throw new IllegalArgumentException("Table not exist");
         }
         if (usingTable != null
-                && ((TableHash)usingTable).getNumberOfUncommitedChanges() != 0) {
-            int uncommited = ((TableHash)usingTable).getNumberOfUncommitedChanges();
+                && ((TableHash) usingTable).getNumberOfUncommitedChanges() != 0) {
+            int uncommited = ((TableHash) usingTable).getNumberOfUncommitedChanges();
             throw new UncommitedChangesException(uncommited + " unsaved changes");
         }
         setUsingTable(name);

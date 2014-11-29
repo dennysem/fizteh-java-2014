@@ -4,15 +4,11 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.storage.strings.TableProvider;
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
-import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Database;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.DatabaseFactory;
-import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.TableHash;
 
 import java.io.File;
 import java.io.IOException;
 
-import static org.junit.Assert.*;
 
 public class DatabaseTest {
     @ClassRule

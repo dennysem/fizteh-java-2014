@@ -11,8 +11,7 @@ public class MultiFileHashMapMain {
     public static void main(String[] args) {
         TableProviderFactory databaseFactory = new DatabaseFactory();
         Database db = (Database) databaseFactory.create("fizteh.db.dir");
-        DatabaseInterpreterState databaseInterpreterState
-                = new DatabaseInterpreterState(db);
+        DatabaseInterpreterState databaseInterpreterState = new DatabaseInterpreterState(db);
         new Interpreter(databaseInterpreterState, new Command[]{
                 new Command("put", 2, new BiConsumer<InterpreterState, String[]>() {
                     @Override
@@ -20,7 +19,6 @@ public class MultiFileHashMapMain {
                         Database database = getDatabase(interpreterState);
                         String key = arguments[0];
                         String value = arguments[1];
-
                         if (database.getUsingTable() == null) {
                             System.out.println("no table");
                         } else {
@@ -56,7 +54,6 @@ public class MultiFileHashMapMain {
                     public void accept(InterpreterState interpreterState, String[] arguments) {
                         Database database = getDatabase(interpreterState);
                         String key = arguments[0];
-
                         if (database.getUsingTable() == null) {
                             System.out.println("no table");
                         } else {
@@ -77,22 +74,7 @@ public class MultiFileHashMapMain {
                 new Command("remove", 1, new BiConsumer<InterpreterState, String[]>() {
                     @Override
                     public void accept(InterpreterState interpreterState, String[] arguments) {
-                        Database database = getDatabase(interpreterState);
-                        if (database.getUsingTable() == null) {
-                            System.out.println("no table");
-                        } else {
-                            try {
-                                if (database.getUsingTable().remove(arguments[0]) != null) {
-                                    System.out.println("removed");
-                                } else {
-                                    System.out.println("not found");
-                                }
-                            } catch (IllegalArgumentException e) {
-                                System.err.println(e.getMessage());
-                            } catch (DatabaseFileStructureException | LoadOrSaveException e) {
-                                System.err.println(e.getMessage());
-                            }
-                        }
+                        remove(interpreterState, arguments);
                     }
                 }),
                 new Command("use", 1, new BiConsumer<InterpreterState, String[]>() {
@@ -204,7 +186,7 @@ public class MultiFileHashMapMain {
                     public void accept(InterpreterState interpreterState, String[] arguments) {
                         DatabaseInterpreterState state = (DatabaseInterpreterState) interpreterState;
                         Database database = state.getDatabase();
-                        TableHash usingTable = (TableHash)database.getUsingTable();
+                        TableHash usingTable = (TableHash) database.getUsingTable();
                         if (usingTable != null
                                 && usingTable.getNumberOfUncommitedChanges() != 0) {
                             int uncommited = usingTable.getNumberOfUncommitedChanges();
@@ -224,5 +206,23 @@ public class MultiFileHashMapMain {
         return database;
     }
 
+    static void remove(InterpreterState interpreterState, String[] arguments) {
+        Database database = getDatabase(interpreterState);
+        if (database.getUsingTable() == null) {
+            System.out.println("no table");
+        } else {
+            try {
+                if (database.getUsingTable().remove(arguments[0]) != null) {
+                    System.out.println("removed");
+                } else {
+                    System.out.println("not found");
+                }
+            } catch (IllegalArgumentException e) {
+                System.err.println(e.getMessage());
+            } catch (DatabaseFileStructureException | LoadOrSaveException e) {
+                System.err.println(e.getMessage());
+            }
+        }
+    }
 }
 
