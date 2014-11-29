@@ -11,3 +11,4 @@ public class DatabaseFactoryTest {
         new DatabaseFactory().create(null);
     }
 }
+
