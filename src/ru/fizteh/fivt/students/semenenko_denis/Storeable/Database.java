@@ -4,6 +4,7 @@ package ru.fizteh.fivt.students.semenenko_denis.Storeable;
  * Created by denny_000 on 01.12.2014.
  */
 
+import javafx.util.Pair;
 import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
@@ -15,14 +16,87 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
+import java.util.function.Function;
 
 public class Database implements ru.fizteh.fivt.storage.structured.TableProvider {
     private final String signatureFileName = "signature.tsv";
 
     private Map<Class<?>, String> classNames = new HashMap<>();
     private Map<String, Class<?>> revClassNames;
-    private String dbDirPath;
+    private String rootDirectory;
     private Map<String, TableHash> tables;
+    ru.fizteh.fivt.storage.structured.Table usingTable;
+
+    public Database(String path) throws IOException {
+        rootDirectory = path;
+        load();
+    }
+
+    void setUsingTable(String name) {
+        usingTable = getTable(name);
+    }
+
+    public ru.fizteh.fivt.storage.structured.Table getUsingTable() {
+        return usingTable;
+    }
+
+    protected File getRootDirectory() throws DatabaseFileStructureException {
+        return new File(rootDirectory);
+    }
+
+    public boolean containsTable(String name) {
+        return tables.containsKey(name);
+    }
+
+    protected void load() throws IOException {
+        File root = getRootDirectory();
+        try {
+            if (root.exists() && root.isDirectory()) {
+                File[] subfolders = getTablesFromRoot(root);
+                for (File folder : subfolders) {
+                    String name = folder.getName();
+                    Path tableSignature = new File(rootDirectory).toPath().resolve(name);
+                    List<Class<?>> signature = readSignature(tableSignature.toFile());
+                    TableHash table = new TableHash(this, name,signature );
+                    tables.put(name, table);
+                }
+            } else {
+                throw new DatabaseFileStructureException("Root directory not found");
+            }
+        } catch (SecurityException ex) {
+            throw new LoadOrSaveException("Error in loading, access denied: " + ex.getMessage(), ex);
+        }
+    }
+
+    protected File[] getTablesFromRoot(File root) {
+        File[] subfolders = root.listFiles();
+        for (File folder : subfolders) {
+            if (!folder.isDirectory()) {
+                return whatToDoWithFiles(folder);
+            }
+        }
+        return subfolders;
+    }
+
+    private File[] whatToDoWithFiles(File folder) {
+        throw new DatabaseFileStructureException("There is files in root folder. File'"
+                + folder.getName() + "");
+    }
+
+    public void useTable(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Name is null");
+        }
+        if (getTable(name) == null) {
+            throw new IllegalArgumentException("Table not exist");
+        }
+        if (usingTable != null
+                && ((TableHash) usingTable).getNumberOfUncommitedChanges() != 0) {
+            int uncommited = ((TableHash) usingTable).getNumberOfUncommitedChanges();
+            throw new UncommitedChangesException(uncommited + " unsaved changes");
+        }
+        setUsingTable(name);
+    }
 
     private List<Class<?>> readSignature(File signatureFile)
             throws IOException {
@@ -45,7 +119,7 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
         }
     }
 
-    private void checkFormat(Table table, Storeable storeable)
+    private void checkFormat(TableHash table, Storeable storeable)
             throws IndexOutOfBoundsException, ColumnFormatException {
         for (int columnNumber = 0; columnNumber < table.getColumnsCount();
              columnNumber++) {
@@ -55,6 +129,15 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
                 throw new ColumnFormatException("Invalid storeable format");
             }
         }
+    }
+
+    public List<Pair<String, Integer>> listTables() {
+        int size = tables.size();
+        List<Pair<String, Integer>> result = new ArrayList<>(size);
+        for (String table : tables.keySet()) {
+            result.add(new Pair<>(table, tables.get(table).size()));
+        }
+        return result;
     }
 
     private void initClassNames() {
@@ -75,19 +158,23 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
     }
 
     private void initProvider() throws IOException {
-        File dbDir = new File(dbDirPath);
+        File dbDir = new File(rootDirectory);
         for (File curDir : dbDir.listFiles()) {
             if (curDir.isDirectory()) {
                 File signatureFile = new File(
                         curDir.getAbsolutePath() + File.separator + signatureFileName);
                 List<Class<?>> signature = readSignature(signatureFile);
-                Table table = new TableHash(
-                        this, curDir.getName(), dbDirPath, signature);
+                TableHash table = new TableHash(
+                        this, curDir.getName(), signature);
                 tables.put(curDir.getName(), table);
             } else {
                 throw new IOException("Directory contains incorrect files");
             }
         }
+    }
+
+    protected Path getRootDirectoryPath() throws DatabaseFileStructureException {
+        return new File(rootDirectory).toPath();
     }
 
     public boolean contains(String name) {
@@ -108,7 +195,8 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
     }
 
     @Override
-    public ru.fizteh.fivt.storage.structured.Table createTable(String name, List<Class<?>> columnTypes) throws IOException {
+    public ru.fizteh.fivt.storage.structured.Table createTable(String name, List<Class<?>> columnTypes)
+            throws IOException {
         if (columnTypes == null) {
             throw new IllegalArgumentException("Signature can't be null");
         }
@@ -120,7 +208,7 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
         if (tables.containsKey(name)) {
             return null;
         } else {
-            String tableDirPath = dbDirPath + File.separator + name;
+            String tableDirPath = rootDirectory + File.separator + name;
             File tableDir = new File(tableDirPath);
             if (!tableDir.mkdir()) {
                 throw new IOException("Can't create this table");
@@ -129,7 +217,7 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
             File signatureFile = new File(tableDirPath
                     + File.separator + signatureFileName);
             writeSignature(signatureFile, columnTypes);
-            TableHash table = new TableHash(this, name, dbDirPath, columnTypes);
+            TableHash table = new TableHash(this, name, columnTypes);
             tables.put(name, table);
             return table;
         }
@@ -137,25 +225,135 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
 
     @Override
     public void removeTable(String name) throws IOException {
-        if (tables.containsKey(name)) {
-            TableHash table = tables.get(name);
-            table.removeFromDisk();
-            String tablePath = dbDirPath + File.separator + name;
-            File tableDir = new File(tablePath);
-            String signaturePath = tablePath + File.separator + signatureFileName;
-            File signatureFile = new File(signaturePath);
-            if (!signatureFile.delete() || !tableDir.delete()) {
-                throw new IOException("Can't remove table");
-            }
-            tables.remove(name);
-        } else {
-            throw new IllegalStateException("Table doesn't exist");
+        if (name == null) {
+            throw new IllegalArgumentException("Name is null");
         }
+        TableHash table = (TableHash) getTable(name);
+        if (table == usingTable) {
+            usingTable = null;
+        }
+        if (table == null) {
+            throw new IllegalArgumentException("Table not exist");
+        }
+        table.drop();
+        tables.remove(table);
     }
 
     @Override
-    public Storeable deserialize(ru.fizteh.fivt.storage.structured.Table table, String value) throws ParseException {
-        return null;
+    public Storeable deserialize(ru.fizteh.fivt.storage.structured.Table table, String value)
+            throws ParseException {
+        String str = value.trim();
+//        String stringRegex = "'([^\\\\']+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*'|\""
+//                + "([^\\\\\"]+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*\"";
+        String stringRegex = "\"([^\"]*)\"";
+        String oneColumnTypeRegex = "\\s*(" + stringRegex + "|null|true|false|-?\\d+(\\.\\d+)?)\\s*";
+        String jsonRegex = "^\\[" + oneColumnTypeRegex + "(," + oneColumnTypeRegex + ")*\\]$";
+        if (!str.matches(jsonRegex)) {
+            throw new ParseException("value isn't in JSON format", 0);
+        } else {
+            try {
+                int leftBracket = str.indexOf('[');
+                int rightBracket = str.lastIndexOf(']');
+                List<Object> values = new LinkedList<>();
+                int i = leftBracket + 1;
+                while (i < rightBracket) {
+                    char currChar = str.charAt(i);
+                    if (currChar == '\"') {
+                        // String argument. Finding end quote.
+                        int endQuoteIndex = i + 1;
+                        while (!(str.charAt(endQuoteIndex) == '\"' && str.charAt(endQuoteIndex - 1) != '\\')) {
+                            endQuoteIndex++;
+                        }
+                        String strColumn = str.substring(i + 1, endQuoteIndex);
+                        values.add(strColumn);
+                        i = endQuoteIndex + 1;
+                    } else if (Character.isSpaceChar(currChar) || currChar == ',') {
+                        i++;
+                    } else if (Character.isDigit(currChar) || currChar == '-') {
+                        int nextComma = str.indexOf(',', i);
+                        if (nextComma == -1) {
+                            // Last column.
+                            nextComma = rightBracket;
+                        }
+                        String number = str.substring(i, nextComma).trim();
+                        Class<?> tableColType = table.getColumnType(values.size());
+                        if (number.indexOf('.') != -1) {
+                            if (tableColType.equals(Double.class)) {
+                                values.add(new Double(number));
+                            } else if (tableColType.equals(Float.class)) {
+                                values.add(new Float(number));
+                            }
+                        } else {
+                            if (tableColType.equals(Integer.class)) {
+                                values.add(new Integer(number));
+                            } else if (tableColType.equals(Long.class)) {
+                                values.add(new Long(number));
+                            } else if (tableColType.equals(Double.class)) {
+                                values.add(new Double(number));
+                            } else if (tableColType.equals(Float.class)) {
+                                values.add(new Float(number));
+                            }
+                        }
+                        i = nextComma + 1;
+                    } else {
+                        // Boolean or null
+                        int nextComma = str.indexOf(',', i);
+                        if (nextComma == -1) {
+                            nextComma = rightBracket;
+                        }
+                        String boolOrNullValue = str.substring(i, nextComma).trim();
+                        if (boolOrNullValue.equals("true")) {
+                            values.add(true);
+                        } else if (boolOrNullValue.equals("false")) {
+                            values.add(false);
+                        } else if (boolOrNullValue.equals("null")) {
+                            values.add(null);
+                        } else {
+                            throw new ParseException("it's not possible, but there is a parse error!", 0);
+                        }
+                        i = nextComma + 1;
+                    }
+                }
+                if (values.size() != table.getColumnsCount()) {
+                    throw new ParseException("incompatible sizes of Storeable in the table and json you passed", 0);
+                }
+                return createFor(table, values);
+            } catch (IndexOutOfBoundsException e) {
+                throw new ParseException("can't parse your json", 0);
+            } catch (NumberFormatException e) {
+                throw new ParseException("types incompatibility", 0);
+            }
+        }
+    }
+
+    protected int findClosingQuotes(String string,
+                                        int begin,
+                                        int end,
+                                        char quoteCharacter,
+                                        char escapeCharacter) throws ParseException {
+        // Indicates that the symbol at current (index) position is escaped by previous symbol.
+        boolean escaped = false;
+
+        for (int index = begin; index < end; index++) {
+            char c = string.charAt(index);
+
+            if (c == quoteCharacter) {
+                if (!escaped) {
+                    return index;
+                }
+                escaped = false;
+            } else if (c == escapeCharacter) {
+                escaped = !escaped;
+            } else {
+                if (escaped) {
+                    throw new ParseException(
+                            "Unexpected escaped symbol at position " + index + ": '" + c + "'", index);
+                }
+            }
+
+        }
+
+        return -1;
     }
 
     @Override
@@ -210,9 +408,5 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
             res.setColumnAt(columnNumber, values.get(columnNumber));
         }
         return res;
-    }
-
-    public Path getDirectory() {
-        return;
     }
 }
