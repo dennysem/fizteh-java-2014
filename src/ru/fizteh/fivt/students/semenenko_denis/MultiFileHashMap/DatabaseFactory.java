@@ -3,8 +3,6 @@ package ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap;
 import ru.fizteh.fivt.storage.strings.TableProvider;
 import ru.fizteh.fivt.storage.strings.TableProviderFactory;
 
-import java.nio.file.Path;
-
 public class DatabaseFactory implements TableProviderFactory{
     Database database;
 
