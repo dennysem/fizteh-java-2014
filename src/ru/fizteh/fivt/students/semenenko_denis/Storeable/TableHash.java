@@ -22,6 +22,11 @@ public class TableHash implements Table{
     private Map<String, String> uncommited = new HashMap<>();
     private String tableName;
     private ru.fizteh.fivt.students.semenenko_denis.Storeable.Database database;
+
+    public List<Class<?>> getSignature() {
+        return signature;
+    }
+
     private List<Class<?>> signature;
 
     public TableHash(Database parentDatabase,  String name,
@@ -95,6 +100,8 @@ public class TableHash implements Table{
                     part.drop();
                 }
             }
+            File signature = new File(directory.toString() + File.separator + "signature.tsv");
+            signature.delete();
             if (!directory.delete()) {
                 throw new LoadOrSaveException("Directory can't deleted. Warning: data lost.");
             }
@@ -188,12 +195,12 @@ public class TableHash implements Table{
 
     @Override
     public int getColumnsCount() {
-        return 0;
+        return signature.size();
     }
 
     @Override
     public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
-        return null;
+        return signature.get(columnIndex);
     }
 
     @Override

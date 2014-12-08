@@ -24,20 +24,12 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
     private Map<Class<?>, String> classNames = new HashMap<>();
     private Map<String, Class<?>> revClassNames;
     private String rootDirectory;
-    private Map<String, TableHash> tables;
-    ru.fizteh.fivt.storage.structured.Table usingTable;
+    private Map<String, TableHash> tables = new HashMap<>();
 
     public Database(String path) throws IOException {
+        initClassNames();
         rootDirectory = path;
         load();
-    }
-
-    void setUsingTable(String name) {
-        usingTable = getTable(name);
-    }
-
-    public ru.fizteh.fivt.storage.structured.Table getUsingTable() {
-        return usingTable;
     }
 
     protected File getRootDirectory() throws DatabaseFileStructureException {
@@ -55,7 +47,8 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
                 File[] subfolders = getTablesFromRoot(root);
                 for (File folder : subfolders) {
                     String name = folder.getName();
-                    Path tableSignature = new File(rootDirectory).toPath().resolve(name);
+                    Path tableSignature = new File(rootDirectory).toPath().resolve(name +
+                    File.separator + signatureFileName);
                     List<Class<?>> signature = readSignature(tableSignature.toFile());
                     TableHash table = new TableHash(this, name,signature );
                     tables.put(name, table);
@@ -83,20 +76,7 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
                 + folder.getName() + "");
     }
 
-    public void useTable(String name) {
-        if (name == null) {
-            throw new IllegalArgumentException("Name is null");
-        }
-        if (getTable(name) == null) {
-            throw new IllegalArgumentException("Table not exist");
-        }
-        if (usingTable != null
-                && ((TableHash) usingTable).getNumberOfUncommitedChanges() != 0) {
-            int uncommited = ((TableHash) usingTable).getNumberOfUncommitedChanges();
-            throw new UncommitedChangesException(uncommited + " unsaved changes");
-        }
-        setUsingTable(name);
-    }
+
 
     private List<Class<?>> readSignature(File signatureFile)
             throws IOException {
@@ -187,6 +167,7 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
 
     @Override
     public ru.fizteh.fivt.storage.structured.Table getTable(String name) {
+        checkIsNameInvalid(name);
         if (tables.containsKey(name)) {
             return tables.get(name);
         } else {
@@ -197,6 +178,7 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
     @Override
     public ru.fizteh.fivt.storage.structured.Table createTable(String name, List<Class<?>> columnTypes)
             throws IOException {
+        checkIsNameInvalid(name);
         if (columnTypes == null) {
             throw new IllegalArgumentException("Signature can't be null");
         }
@@ -213,7 +195,6 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
             if (!tableDir.mkdir()) {
                 throw new IOException("Can't create this table");
             }
-
             File signatureFile = new File(tableDirPath
                     + File.separator + signatureFileName);
             writeSignature(signatureFile, columnTypes);
@@ -224,24 +205,27 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
     }
 
     @Override
-    public void removeTable(String name) throws IOException {
+    public void removeTable(String name)
+            throws IOException {
+        checkIsNameInvalid(name);
         if (name == null) {
             throw new IllegalArgumentException("Name is null");
         }
         TableHash table = (TableHash) getTable(name);
-        if (table == usingTable) {
-            usingTable = null;
-        }
+
         if (table == null) {
-            throw new IllegalArgumentException("Table not exist");
+            throw new IllegalStateException("Table not exist");
         }
         table.drop();
-        tables.remove(table);
+        tables.remove(name);
     }
 
     @Override
     public Storeable deserialize(ru.fizteh.fivt.storage.structured.Table table, String value)
             throws ParseException {
+        if (value == null) {
+            return null;
+        }
         String str = value.trim();
 //        String stringRegex = "'([^\\\\']+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*'|\""
 //                + "([^\\\\\"]+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*\"";
@@ -362,12 +346,16 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
         if (value == null) {
             return null;
         }
+        List<Class<?>> signature = (((TableHash) table).getSignature());
         StringBuilder builder = new StringBuilder();
         int size = table.getColumnsCount();
         builder.append('[');
         Object obj;
         for (int i = 0; i < size; i++) {
             obj = value.getColumnAt(i);
+            if (obj != null && !obj.getClass().equals(signature.get(i))) {
+                throw new ColumnFormatException("Wrong column format");
+            }
             if (obj != null && obj.getClass().equals(String.class)) {
                 builder.append('"');
             }
@@ -376,7 +364,7 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
                 builder.append('"');
             }
             if (i != size - 1) {
-                builder.append(", ");
+                builder.append(",");
             }
         }
         builder.append(']');
@@ -399,7 +387,7 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
         if (values.size() != table.getColumnsCount()) {
             throw new IndexOutOfBoundsException("Invalid number of values");
         }
-        StorableClass res = (StorableClass) (table);
+        StorableClass res = (StorableClass) createFor(table);
         for (int columnNumber = 0; columnNumber < values.size(); columnNumber++) {
             if (!table.getColumnType(columnNumber).equals(
                     values.get(columnNumber).getClass())) {
@@ -409,4 +397,15 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
         }
         return res;
     }
+
+    protected static void checkIsNameInvalid(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Name can't be null");
+        }
+        if (name.contains(File.separator) || name.startsWith(".")) {
+            throw new IllegalArgumentException("Invalid name of table");
+        }
+    }
+
+
 }
