@@ -180,6 +180,11 @@ public class TableHash implements Table{
     }
 
     @Override
+    int getNumberOfUncommittedChanges() {
+        return uncommited.size();
+    }
+
+    @Override
     public int commit() throws IOException {
         int result = uncommited.size();
         save();

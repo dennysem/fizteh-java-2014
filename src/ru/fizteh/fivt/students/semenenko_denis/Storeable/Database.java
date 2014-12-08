@@ -36,10 +36,6 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
         return new File(rootDirectory);
     }
 
-    public boolean containsTable(String name) {
-        return tables.containsKey(name);
-    }
-
     protected void load() throws IOException {
         File root = getRootDirectory();
         try {
@@ -137,33 +133,10 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
         }
     }
 
-    private void initProvider() throws IOException {
-        File dbDir = new File(rootDirectory);
-        for (File curDir : dbDir.listFiles()) {
-            if (curDir.isDirectory()) {
-                File signatureFile = new File(
-                        curDir.getAbsolutePath() + File.separator + signatureFileName);
-                List<Class<?>> signature = readSignature(signatureFile);
-                TableHash table = new TableHash(
-                        this, curDir.getName(), signature);
-                tables.put(curDir.getName(), table);
-            } else {
-                throw new IOException("Directory contains incorrect files");
-            }
-        }
-    }
-
     protected Path getRootDirectoryPath() throws DatabaseFileStructureException {
         return new File(rootDirectory).toPath();
     }
 
-    public boolean contains(String name) {
-        return tables.containsKey(name);
-    }
-
-    public Map<String, TableHash> getAllTables() {
-        return tables;
-    }
 
     @Override
     public ru.fizteh.fivt.storage.structured.Table getTable(String name) {
@@ -339,6 +312,15 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
         }
 
         return -1;
+    }
+
+    @Override
+    List<String> getTableNames() {
+        List<String> result = new ArrayList<>();
+        for (String name: tables.keySet()) {
+            result.add(name);
+        }
+        return result;
     }
 
     @Override
