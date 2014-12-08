@@ -227,8 +227,6 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
             return null;
         }
         String str = value.trim();
-//        String stringRegex = "'([^\\\\']+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*'|\""
-//                + "([^\\\\\"]+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*\"";
         String stringRegex = "\"([^\"]*)\"";
         String oneColumnTypeRegex = "\\s*(" + stringRegex + "|null|true|false|-?\\d+(\\.\\d+)?)\\s*";
         String jsonRegex = "^\\[" + oneColumnTypeRegex + "(," + oneColumnTypeRegex + ")*\\]$";
@@ -256,7 +254,6 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
                     } else if (Character.isDigit(currChar) || currChar == '-') {
                         int nextComma = str.indexOf(',', i);
                         if (nextComma == -1) {
-                            // Last column.
                             nextComma = rightBracket;
                         }
                         String number = str.substring(i, nextComma).trim();
@@ -280,7 +277,6 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
                         }
                         i = nextComma + 1;
                     } else {
-                        // Boolean or null
                         int nextComma = str.indexOf(',', i);
                         if (nextComma == -1) {
                             nextComma = rightBracket;
