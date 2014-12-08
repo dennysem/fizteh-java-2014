@@ -315,7 +315,7 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
     }
 
     @Override
-    List<String> getTableNames() {
+    public List<String> getTableNames() {
         List<String> result = new ArrayList<>();
         for (String name: tables.keySet()) {
             result.add(name);

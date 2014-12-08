@@ -180,7 +180,7 @@ public class TableHash implements Table{
     }
 
     @Override
-    int getNumberOfUncommittedChanges() {
+    public int getNumberOfUncommittedChanges() {
         return uncommited.size();
     }
 
