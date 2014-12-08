@@ -7,7 +7,6 @@ import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.semenenko_denis.Storeable.Database;
 import ru.fizteh.fivt.students.semenenko_denis.Storeable.DatabaseFactory;
-import ru.fizteh.fivt.students.semenenko_denis.Storeable.StorableClass;
 import ru.fizteh.fivt.students.semenenko_denis.Storeable.TableHash;
 
 import java.io.File;
