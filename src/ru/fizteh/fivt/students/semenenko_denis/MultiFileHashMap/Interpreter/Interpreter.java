@@ -55,6 +55,7 @@ public class Interpreter {
         String[] statements = line.split(STATEMENT_DELIMITER);
         for (String statement : statements) {
             String[] chunks = Utils.findAll(PARAM_REGEXP, statement);
+
             String commandName = chunks[0];
             String[] params = Arrays.copyOfRange(chunks, 1, chunks.length);
             Command command = commands.get(commandName);

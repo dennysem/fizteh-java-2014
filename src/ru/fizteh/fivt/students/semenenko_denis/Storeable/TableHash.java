@@ -5,12 +5,12 @@ import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.text.ParseException;
-import java.util.*;
-import java.util.function.Consumer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by denny_000 on 01.12.2014.
@@ -22,17 +22,12 @@ public class TableHash implements Table{
     private Map<String, String> uncommited = new HashMap<>();
     private String tableName;
     private ru.fizteh.fivt.students.semenenko_denis.Storeable.Database database;
-    private List<Class<?>> signature;
 
-    public TableHash(Database parentDatabase,  String name,
-                           List<Class<?>> newSignature) {
+    public TableHash(String name, Database databaseParent) {
         initDATFiles();
         tableName = name;
-        signature = newSignature;
-        database = parentDatabase;
-        signature = newSignature;
+        database = databaseParent;
     }
-
 
     protected void initDATFiles() {
         structuredParts = new TableFileDAT[SUBDIRECTORIES_COUNT][];
@@ -87,24 +82,6 @@ public class TableHash implements Table{
         }
     }
 
-    public void drop() {
-        try {
-            File directory = getDirectory().toFile();
-            for (TableFileDAT[] dir : structuredParts) {
-                for (TableFileDAT part : dir) {
-                    part.drop();
-                }
-            }
-            if (!directory.delete()) {
-                throw new LoadOrSaveException("Directory can't deleted. Warning: data lost.");
-            }
-        } catch (SecurityException ex) {
-            throw new LoadOrSaveException("Access denied in deleting table.", ex);
-        } catch (UnsupportedOperationException ex) {
-            throw new LoadOrSaveException("Error in deleting table.", ex);
-        }
-    }
-
     public int getNumberOfUncommitedChanges() {
         return uncommited.size();
     }
@@ -150,40 +127,17 @@ public class TableHash implements Table{
 
     @Override
     public int size() {
-        int deletedCount = 0;
-        int addedCount = 0;
-        for (String key : uncommited.keySet()) {
-            String value = uncommited.get(key);
-            if (value == null) {
-                ++deletedCount;
-            } else {
-                if (getDATFileForKey(key).get(key) == null) {
-                    addedCount++;
-                }
-            }
-        }
-        int result = 0;
-        for (TableFileDAT[] dir : structuredParts) {
-            for (TableFileDAT part : dir) {
-                part.load();
-                result += part.count();
-            }
-        }
-        return result + addedCount - deletedCount;
+        return 0;
     }
 
     @Override
     public int commit() throws IOException {
-        int result = uncommited.size();
-        save();
-        return result;    }
+        return 0;
+    }
 
     @Override
     public int rollback() {
-        int result = getNumberOfUncommitedChanges();
-        uncommited.clear();
-        initDATFiles();
-        return result;
+        return 0;
     }
 
     @Override
@@ -217,30 +171,4 @@ public class TableHash implements Table{
         }
     }
 
-    public List<String> list() {
-        ArrayList<String> oldList = new ArrayList<>();
-        for (TableFileDAT[] dir : structuredParts) {
-            for (TableFileDAT part : dir) {
-                part.load();
-                oldList.addAll(part.list());
-            }
-        }
-        Set<String> items = new TreeSet<>(oldList);
-        for (String key : uncommited.keySet()) {
-            String value = uncommited.get(key);
-            if (value == null) {
-                items.remove(key);
-            } else {
-                items.add(key);
-            }
-        }
-        final ArrayList<String> result = new ArrayList<>(items.size());
-        items.forEach(new Consumer<String>() {
-            @Override
-            public void accept(String s) {
-                result.add(s);
-            }
-        });
-        return result;
-    }
 }
