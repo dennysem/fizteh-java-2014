@@ -32,7 +32,7 @@ public class Command {
             argument[0] = inputedData;
             callback.accept(interpreterState, argument);
         }
-        if (numArguments != - 1 && params.length != numArguments) {
+        if (params.length != numArguments) {
             Utils.interpreterError("Invalid number of arguments: " + numArguments + " expected, " + params.length
                     + " found.");
         } else {

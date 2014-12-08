@@ -12,10 +12,11 @@ import java.io.IOException;
 public class DatabaseFactory implements ru.fizteh.fivt.storage.structured.TableProviderFactory {
     @Override
     public TableProvider create(String path) throws IOException {
-        if (path == null) {
+        String directoryPath = System.getProperty(path);
+        if (directoryPath == null) {
             throw new IllegalArgumentException("Database directory doesn't set.");
         } else {
-            Database database = new Database(path);
+            Database database = new Database(directoryPath);
             return database;
         }
     }
