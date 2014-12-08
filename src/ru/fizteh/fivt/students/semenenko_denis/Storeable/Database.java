@@ -5,7 +5,6 @@ package ru.fizteh.fivt.students.semenenko_denis.Storeable;
  */
 
 import javafx.util.Pair;
-import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.*;
@@ -16,7 +15,6 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
-import java.util.function.Function;
 
 public class Database implements ru.fizteh.fivt.storage.structured.TableProvider {
     private final String signatureFileName = "signature.tsv";
@@ -43,10 +41,10 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
                 File[] subfolders = getTablesFromRoot(root);
                 for (File folder : subfolders) {
                     String name = folder.getName();
-                    Path tableSignature = new File(rootDirectory).toPath().resolve(name +
-                            File.separator + signatureFileName);
+                    Path tableSignature = new File(rootDirectory).toPath().resolve(name
+                            + File.separator + signatureFileName);
                     List<Class<?>> signature = readSignature(tableSignature.toFile());
-                    TableHash table = new TableHash(this, name,signature );
+                    TableHash table = new TableHash(this, name, signature);
                     tables.put(name, table);
                 }
             } else {

@@ -122,3 +122,4 @@ public class StorableClass implements Storeable {
         return (String) list.get(columnIndex);
     }
 }
+

@@ -5,7 +5,6 @@ import org.junit.rules.TemporaryFolder;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
-import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.TableHash;
 import ru.fizteh.fivt.students.semenenko_denis.Storeable.Database;
 import ru.fizteh.fivt.students.semenenko_denis.Storeable.DatabaseFactory;
 import ru.fizteh.fivt.students.semenenko_denis.Storeable.StorableClass;
@@ -13,8 +12,6 @@ import ru.fizteh.fivt.students.semenenko_denis.Storeable.StorableClass;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 
 public class TableHashTest {

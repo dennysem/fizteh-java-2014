@@ -12,11 +12,8 @@ import ru.fizteh.fivt.students.semenenko_denis.Storeable.TableHash;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 public class DatabaseTest {
 
@@ -62,7 +59,7 @@ public class DatabaseTest {
         invalidValues.add(1);
         invalidValues.add((long) 2);
         invalidValues.add((byte) 3);
-        invalidValues.add((float)4.0);
+        invalidValues.add((float) 4.0);
         invalidValues.add((double) 5.0);
         invalidValues.add(true);
         invalidValues.add(7);

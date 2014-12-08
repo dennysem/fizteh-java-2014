@@ -46,7 +46,7 @@ public class StorableMain {
                     @Override
                     public void accept(InterpreterState interpreterState, String[] arguments) {
                         Database database = getDatabase(interpreterState);
-                        putCmd(database,(DatabaseInterpreterState) interpreterState, arguments);
+                        putCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
                     }
                 }),
                 new Command("list", 0, new BiConsumer<InterpreterState, String[]>() {

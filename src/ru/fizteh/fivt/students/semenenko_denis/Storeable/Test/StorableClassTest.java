@@ -8,8 +8,6 @@ import ru.fizteh.fivt.students.semenenko_denis.Storeable.StorableClass;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
-
 public class StorableClassTest {
     StorableClass storeable;
 

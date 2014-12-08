@@ -21,7 +21,7 @@ public class TableFileDAT {
     private int folderNum;
     private int fileNum;
 
-    public TableFileDAT(ru.fizteh.fivt.students.semenenko_denis.Storeable.TableHash parentTable, int folderNumber, int fileNumber) {
+    public TableFileDAT(TableHash parentTable, int folderNumber, int fileNumber) {
         super();
         table = parentTable;
         folderNum = folderNumber;
