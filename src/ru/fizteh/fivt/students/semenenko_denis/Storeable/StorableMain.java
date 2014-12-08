@@ -1,12 +1,10 @@
 package ru.fizteh.fivt.students.semenenko_denis.Storeable;
 
-import com.sun.xml.internal.fastinfoset.util.CharArray;
 import javafx.util.Pair;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.*;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter.Utils;
-import ru.fizteh.fivt.students.semenenko_denis.Storeable.DatabaseInterpreterState;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter.Command;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter.Interpreter;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter.InterpreterState;
