@@ -18,8 +18,7 @@ public class DatabaseTest {
 
     @BeforeClass
     public static void setUpClass() throws IOException {
-        dbPath = folder.newFolder("fizteh.db.dir");
-        database = new DatabaseFactory().create(dbPath.getPath());
+        database = new DatabaseFactory().create(folder.newFolder().getAbsolutePath().toString());
     }
 
     @Test
@@ -78,26 +77,6 @@ public class DatabaseTest {
         database.createTable("qwerty");
         Assert.assertEquals(null, database.createTable("qwerty"));
         database.removeTable("qwerty");
-    }
-
-    @Test
-    public void testGetTableFromManyTablesAndLoadDatabase() {
-        for (int i = 0; i < 10; i++) {
-            database.createTable("t" + i);
-        }
-        for (int i = 0; i < 10; i++) {
-            assertCanGetTableTNum(i);
-        }
-        database = new DatabaseFactory().create(dbPath.getPath());
-        for (int i = 0; i < 10; i++) {
-            database.removeTable("t" + i);
-            for (int j = 0; j <= i; j++) {
-                Assert.assertEquals(null, database.getTable("t" + j));
-            }
-            for (int j = i + 1; j < 10; j++) {
-                assertCanGetTableTNum(j);
-            }
-        }
     }
 
     private void assertCanGetTableTNum(int i) {

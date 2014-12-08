@@ -10,7 +10,7 @@ import java.util.function.BiConsumer;
 public class MultiFileHashMapMain {
     public static void main(String[] args) {
         TableProviderFactory databaseFactory = new DatabaseFactory();
-        Database db = (Database) databaseFactory.create("fizteh.db.dir");
+        Database db = (Database) databaseFactory.create(System.getProperty("fizteh.db.dir"));
         DatabaseInterpreterState databaseInterpreterState = new DatabaseInterpreterState(db);
         new Interpreter(databaseInterpreterState, new Command[]{
                 new Command("put", 2, new BiConsumer<InterpreterState, String[]>() {

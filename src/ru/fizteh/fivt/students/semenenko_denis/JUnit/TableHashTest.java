@@ -25,8 +25,7 @@ public class TableHashTest {
     public void initTable() throws IOException {
         TableProviderFactory factory = new DatabaseFactory();
         dbDirPath = tmpFolder.newFolder().getAbsolutePath();
-        TableProvider provider = factory.create("fizteh.db.dir");
-        provider.removeTable("table");
+        TableProvider provider = factory.create(dbDirPath.toString());
         table = provider.createTable("table");
     }
 
