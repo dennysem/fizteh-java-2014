@@ -29,6 +29,7 @@ public class Command {
             String[] argument = new String[1];
             argument[0] = inputedData;
             callback.accept(interpreterState, argument);
+            return;
         }
         if (numArguments != -1 && params.length != numArguments) {
             Utils.interpreterError("Invalid number of arguments: " + numArguments + " expected, " + params.length

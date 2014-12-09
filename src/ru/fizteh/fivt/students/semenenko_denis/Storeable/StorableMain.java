@@ -22,11 +22,11 @@ public class StorableMain {
     private static Map<String, Class<?>> stringClassMap = new HashMap<>();
 
     static {
-        stringClassMap.put("Integer", Integer.class);
-        stringClassMap.put("Long", Long.class);
-        stringClassMap.put("Byte", Byte.class);
-        stringClassMap.put("Double", Double.class);
-        stringClassMap.put("Boolean", Boolean.class);
+        stringClassMap.put("int", Integer.class);
+        stringClassMap.put("long", Long.class);
+        stringClassMap.put("byte", Byte.class);
+        stringClassMap.put("double", Double.class);
+        stringClassMap.put("boolean", Boolean.class);
         stringClassMap.put("String", String.class);
     }
 
@@ -37,7 +37,7 @@ public class StorableMain {
         try {
             db = (Database) databaseFactory.create(System.getProperty("fizteh.db.dir"));
             databaseInterpreterState = new DatabaseInterpreterState(db);
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             System.err.println(e.getMessage());
             System.exit(-1);
         }
