@@ -7,6 +7,8 @@ package ru.fizteh.fivt.students.semenenko_denis.Storeable;
 import javafx.util.Pair;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.storage.structured.TableProvider;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.*;
 
 import java.io.File;
@@ -16,7 +18,7 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
 
-public class Database implements ru.fizteh.fivt.storage.structured.TableProvider {
+public class Database implements TableProvider {
     private final String signatureFileName = "signature.tsv";
 
     private Map<Class<?>, String> classNames = new HashMap<>();
@@ -137,7 +139,7 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
 
 
     @Override
-    public ru.fizteh.fivt.storage.structured.Table getTable(String name) {
+    public Table getTable(String name) {
         checkIsNameInvalid(name);
         if (tables.containsKey(name)) {
             return tables.get(name);
@@ -148,7 +150,7 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
 
 
     @Override
-    public ru.fizteh.fivt.storage.structured.Table createTable(String name, List<Class<?>> columnTypes)
+    public Table createTable(String name, List<Class<?>> columnTypes)
             throws IOException {
         checkIsNameInvalid(name);
         if (columnTypes == null) {
@@ -199,8 +201,6 @@ public class Database implements ru.fizteh.fivt.storage.structured.TableProvider
             return null;
         }
         String str = value.trim();
-//        String stringRegex = "'([^\\\\']+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*'|\""
-//                + "([^\\\\\"]+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*\"";
         String stringRegex = "\"([^\"]*)\"";
         String oneColumnTypeRegex = "\\s*(" + stringRegex + "|null|true|false|-?\\d+(\\.\\d+)?)\\s*";
         String jsonRegex = "^\\[" + oneColumnTypeRegex + "(," + oneColumnTypeRegex + ")*\\]$";

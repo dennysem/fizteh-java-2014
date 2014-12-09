@@ -17,8 +17,7 @@ public class DatabaseInterpreterState extends InterpreterState {
     void setUsingTable(String name) {
         if (name == null) {
             usingTable = null;
-        }
-        else {
+        } else {
             usingTable = database.getTable(name);
         }
     }
