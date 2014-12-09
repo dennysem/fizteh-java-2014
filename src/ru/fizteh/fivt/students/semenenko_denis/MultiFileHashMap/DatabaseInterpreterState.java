@@ -16,8 +16,8 @@ public class DatabaseInterpreterState extends InterpreterState{
     public boolean tryToSave() {
         try {
             save();
-        } catch (TableNotFoundException ex) {
-            //Table not selected.
+        } catch (TableNotFoundException e) {
+            System.out.print(e.getMessage());
         } catch (LoadOrSaveException | DatabaseFileStructureException ex) {
             System.err.println(ex.getMessage());
             return false;
