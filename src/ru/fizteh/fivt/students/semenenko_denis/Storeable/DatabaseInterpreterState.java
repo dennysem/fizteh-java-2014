@@ -15,7 +15,12 @@ public class DatabaseInterpreterState extends InterpreterState {
     Table usingTable;
 
     void setUsingTable(String name) {
-        usingTable = database.getTable(name);
+        if (name == null) {
+            usingTable = null;
+        }
+        else {
+            usingTable = database.getTable(name);
+        }
     }
 
     public ru.fizteh.fivt.storage.structured.Table getUsingTable() {

@@ -42,7 +42,7 @@ public class StorableMain {
             System.exit(-1);
         }
         new Interpreter(databaseInterpreterState, new Command[]{
-                new Command("put", 2, new BiConsumer<InterpreterState, String[]>() {
+                new Command("put", -1, new BiConsumer<InterpreterState, String[]>() {
                     @Override
                     public void accept(InterpreterState interpreterState, String[] arguments) {
                         Database database = getDatabase(interpreterState);
@@ -91,8 +91,15 @@ public class StorableMain {
                             Database database = getDatabase(interpreterState);
                             String inputedString = arguments[0];
                             String[] tokens = Utils.findAll(PARAM_REGEXP, inputedString);
+                            if (tokens.length < 2) {
+                                throw new IllegalArgumentException("Wrong number of arguments");
+                            }
                             String name = tokens[0];
-                            List<Class<?>> signature = parseSignature(inputedString);
+                            StringBuilder signatureStr = new StringBuilder();
+                            for (int i = 1; i < tokens.length; ++i) {
+                                signatureStr.append(tokens[i] + " ");
+                            }
+                            List<Class<?>> signature = parseSignature(signatureStr.toString());
                             database.createTable(name, signature);
                             System.out.println("created");
                         } catch (TableAlreadyExistsException e) {
@@ -146,13 +153,13 @@ public class StorableMain {
         int firstBrace = inputedString.indexOf('(');
         int lastBrace = inputedString.lastIndexOf(')');
         if (firstBrace == -1 || lastBrace == -1) {
-            throw new IllegalArgumentException("Wrong aruments");
+            throw new IllegalArgumentException("Wrong arguments: no signature of table");
         }
         inputedString = inputedString.replace('(', ' ');
         inputedString = inputedString.replace(')', ' ');
         String[] tokens = Utils.findAll(PARAM_REGEXP, inputedString);
         List<Class<?>> result = new ArrayList<>();
-        for (int i = 1; i < tokens.length; ++i) {
+        for (int i = 0; i < tokens.length; ++i) {
             Class<?> cl = stringClassMap.get(tokens[i]);
             if (cl != null) {
                 result.add(cl);
@@ -275,9 +282,16 @@ public class StorableMain {
 
     private static void putCmd(Database database,
                                DatabaseInterpreterState interpreterState,
-                               String[] arguments) {
+                               String[] inputedString) {
+        String[] arguments = Utils.findAll(PARAM_REGEXP, inputedString[0]);
+        if (arguments.length < 2) {
+            throw new IllegalArgumentException("Wrong number of arguments");
+        }
         String key = arguments[0];
-        String value = arguments[1];
+        StringBuilder value = new StringBuilder();
+        for (int i = 1; i < arguments.length; ++i) {
+            value.append(arguments[i] + " ");
+        }
         if (interpreterState.getUsingTable() == null) {
             System.out.println("no table");
         } else {
@@ -285,8 +299,8 @@ public class StorableMain {
                 Table usingTable = interpreterState.getUsingTable();
                 String result = null;
                 try {
-                    result = database.serialize(usingTable, usingTable.put(arguments[0],
-                            database.deserialize(usingTable, arguments[1])));
+                    result = database.serialize(usingTable, usingTable.put(key,
+                            database.deserialize(usingTable, value.toString())));
                 } catch (ParseException e) {
                     System.out.println(e.getMessage());
                 }
