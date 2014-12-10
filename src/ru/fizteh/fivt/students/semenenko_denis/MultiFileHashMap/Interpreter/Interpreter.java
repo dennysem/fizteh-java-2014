@@ -1,5 +1,7 @@
 package ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter;
 
+import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.LoadOrSaveException;
+
 import java.util.*;
 
 public class Interpreter {
@@ -64,8 +66,15 @@ public class Interpreter {
             }*/
             if (command == null) {
                 Utils.interpreterError("Command not found: " + commandName);
+                break;
             } else {
-                command.execute(this.interpreterState, params);
+                try {
+                    command.execute(this.interpreterState, params);
+                } catch (IllegalArgumentException |
+                        LoadOrSaveException e) {
+                    System.err.println(e.getMessage());
+                    break;
+                }
             }
             if (interpreterState.exited()) {
                 throw new StopInterpretationException();

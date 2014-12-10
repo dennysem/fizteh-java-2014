@@ -87,26 +87,11 @@ public class StorableMain {
                 new Command("create", -1, new BiConsumer<InterpreterState, String[]>() {
                     @Override
                     public void accept(InterpreterState interpreterState, String[] arguments) {
+                        Database database = getDatabase(interpreterState);
                         try {
-                            Database database = getDatabase(interpreterState);
-                            String inputedString = arguments[0];
-                            String[] tokens = Utils.findAll(PARAM_REGEXP, inputedString);
-                            if (tokens.length < 2) {
-                                throw new IllegalArgumentException("Wrong number of arguments");
-                            }
-                            String name = tokens[0];
-                            StringBuilder signatureStr = new StringBuilder();
-                            for (int i = 1; i < tokens.length; ++i) {
-                                signatureStr.append(tokens[i] + " ");
-                            }
-                            List<Class<?>> signature = parseSignature(signatureStr.toString());
-                            database.createTable(name, signature);
-                            System.out.println("created");
-                        } catch (TableAlreadyExistsException e) {
-                            System.out.println("Table already exists");
-                        } catch (DatabaseFileStructureException | IOException
-                                | LoadOrSaveException | IllegalArgumentException e) {
-                            System.out.println(e.getMessage());
+                            createCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
+                        } catch (IOException e) {
+                            throw new LoadOrSaveException(e.getMessage());
                         }
                     }
                 }),
@@ -190,6 +175,27 @@ public class StorableMain {
             System.out.println(changes);
         } else {
             System.out.println("no table");
+        }
+    }
+
+    private static void createCmd(Database database,
+                                  DatabaseInterpreterState interpreterState,
+                                  String[] arguments) throws IOException {
+        String inputedString = arguments[0];
+        String[] tokens = Utils.findAll(PARAM_REGEXP, inputedString);
+        if (tokens.length < 2) {
+            throw new IllegalArgumentException("Wrong number of arguments");
+        }
+        String name = tokens[0];
+        StringBuilder signatureStr = new StringBuilder();
+        for (int i = 1; i < tokens.length; ++i) {
+            signatureStr.append(tokens[i] + " ");
+        }
+        List<Class<?>> signature = parseSignature(signatureStr.toString());
+        if (database.createTable(name, signature) != null) {
+            System.out.println("created");
+        } else {
+            System.out.println(name + " already exists");
         }
     }
 
@@ -303,6 +309,7 @@ public class StorableMain {
                             database.deserialize(usingTable, value.toString())));
                 } catch (ParseException e) {
                     System.out.println(e.getMessage());
+                    return;
                 }
 
                 if (result == null) {
@@ -357,7 +364,7 @@ public class StorableMain {
                 } else {
                     System.out.println("not found");
                 }
-            } catch (IllegalArgumentException  | IllegalStateException e) {
+            } catch (IllegalArgumentException | IllegalStateException e) {
                 System.err.println(e.getMessage());
             } catch (DatabaseFileStructureException | LoadOrSaveException e) {
                 System.err.println(e.getMessage());
