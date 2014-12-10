@@ -370,7 +370,7 @@ public class Database implements TableProvider {
         }
         StorableClass res = (StorableClass) createFor(table);
         for (int columnNumber = 0; columnNumber < values.size(); columnNumber++) {
-            if (!table.getColumnType(columnNumber).equals(
+            if (values.get(columnNumber) != null && !table.getColumnType(columnNumber).equals(
                     values.get(columnNumber).getClass())) {
                 throw new ColumnFormatException("Invalid values format");
             }
