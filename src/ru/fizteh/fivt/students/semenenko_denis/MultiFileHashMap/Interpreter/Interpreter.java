@@ -35,7 +35,7 @@ public class Interpreter {
 
     private void runBatchMode(String[] args) throws StopInterpretationException {
         executeLine(String.join(" ", args));
-        executeLine("exit");
+        throw new StopInterpretationException();
     }
 
     private void runInteractiveMode() throws StopInterpretationException {
