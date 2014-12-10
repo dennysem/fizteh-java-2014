@@ -70,8 +70,8 @@ public class Interpreter {
             } else {
                 try {
                     command.execute(this.interpreterState, params);
-                } catch (IllegalArgumentException |
-                        LoadOrSaveException e) {
+                } catch (IllegalArgumentException
+                        | LoadOrSaveException e) {
                     System.err.println(e.getMessage());
                     break;
                 }

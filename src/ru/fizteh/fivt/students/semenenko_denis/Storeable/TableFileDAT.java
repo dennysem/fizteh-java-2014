@@ -17,7 +17,7 @@ public class TableFileDAT {
     protected static final String UNEXPECTED_END_OF_FILE = "Unexpected end of file.";
     protected Map<String, String> data = new TreeMap<>();
     private boolean isLoaded = false;
-    private ru.fizteh.fivt.students.semenenko_denis.Storeable.TableHash table;
+    private TableHash table;
     private int folderNum;
     private int fileNum;
 
