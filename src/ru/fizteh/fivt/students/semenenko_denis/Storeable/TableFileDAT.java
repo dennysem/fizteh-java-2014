@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class TableFileDAT {
-    protected static final Charset CHARSET = Charset.forName("UTF-8");
+    protected static final Charset CODING = Charset.forName("UTF-8");
     protected static final String UNEXPECTED_END_OF_FILE = "Unexpected end of file.";
     protected Map<String, String> data = new TreeMap<>();
     private boolean isLoaded = false;
@@ -22,7 +22,6 @@ public class TableFileDAT {
     private int fileNum;
 
     public TableFileDAT(TableHash parentTable, int folderNumber, int fileNumber) {
-        super();
         table = parentTable;
         folderNum = folderNumber;
         fileNum = fileNumber;
@@ -81,7 +80,7 @@ public class TableFileDAT {
                     if (reader.read(buffer) != size) {
                         throw new LoadOrSaveException(UNEXPECTED_END_OF_FILE);
                     } else {
-                        data.put(keys.get(i), new String(buffer, CHARSET));
+                        data.put(keys.get(i), new String(buffer, CODING));
                     }
 
                 }
@@ -123,7 +122,7 @@ public class TableFileDAT {
         for (int i = 0; i < lineBytes.length; ++i) {
             lineBytes[i] = line.get(i);
         }
-        return new String(lineBytes, CHARSET);
+        return new String(lineBytes, CODING);
     }
 
     public void save() throws LoadOrSaveException, DatabaseFileStructureException {
@@ -194,10 +193,10 @@ public class TableFileDAT {
                 int keysDataSize = 0;
                 ArrayList<byte[]> values = new ArrayList<>(keys.size());
                 for (String key : keys) {
-                    byte[] buffer = key.getBytes(CHARSET);
+                    byte[] buffer = key.getBytes(CODING);
                     keysUtf8.add(buffer);
                     keysDataSize += buffer.length + 1 + Integer.BYTES;
-                    values.add(data.get(key).getBytes(CHARSET));
+                    values.add(data.get(key).getBytes(CODING));
                 }
                 byte[] separator = new byte[]{0};
                 for (int i = 0; i < values.size(); i++) {

@@ -14,8 +14,7 @@ public class DatabaseFactory implements ru.fizteh.fivt.storage.structured.TableP
         if (path == null) {
             throw new IllegalArgumentException("Database directory doesn't set.");
         } else {
-            Database database = new Database(path);
-            return database;
+            return new Database(path);
         }
     }
 }

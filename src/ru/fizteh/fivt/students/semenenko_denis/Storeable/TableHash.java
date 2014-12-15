@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 /**
@@ -19,7 +20,9 @@ public class TableHash implements Table{
     protected static final int FILES_COUNT = 16;
     protected static final int SUBDIRECTORIES_COUNT = 16;
     private TableFileDAT[][] structuredParts;
-    private Map<String, String> uncommited = new HashMap<>();
+    private ThreadLocal<Map<String, String>> uncommited
+            = ThreadLocal.withInitial(() -> new HashMap<>());
+    private ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
     private String tableName;
     private ru.fizteh.fivt.students.semenenko_denis.Storeable.Database database;
 
@@ -74,15 +77,15 @@ public class TableHash implements Table{
     }
 
     public void save() {
-        for (String key : uncommited.keySet()) {
-            String value = uncommited.get(key);
+        for (String key : uncommited.get().keySet()) {
+            String value = uncommited.get().get(key);
             if (value == null) {
                 getDATFileForKey(key).remove(key);
             } else {
                 getDATFileForKey(key).put(key, value);
             }
         }
-        uncommited.clear();
+        uncommited.get().clear();
         for (TableFileDAT[] dir : structuredParts) {
             for (TableFileDAT part : dir) {
                 if (part.isLoaded()) {
@@ -113,7 +116,7 @@ public class TableHash implements Table{
     }
 
     public int getNumberOfUncommitedChanges() {
-        return uncommited.size();
+        return uncommited.get().size();
     }
 
     public Path getDirectory() throws DatabaseFileStructureException {
@@ -126,16 +129,21 @@ public class TableHash implements Table{
             throw new IllegalArgumentException("Key is null.");
         }
         if (value == null) {
-            throw new IllegalArgumentException("Key is null.");
+            throw new IllegalArgumentException("Value is null.");
         }
-        StorableClass oldValue = (StorableClass) get(key);
-        if (value.equals(getDATFileForKey(key).get(key))) {
-            uncommited.remove(key);
-        } else {
-            String serializedValue = database.serialize(this, value);
-            uncommited.put(key, serializedValue);
+        lock.readLock().lock();
+        try {
+            StorableClass oldValue = (StorableClass) get(key);
+            if (value.equals(getDATFileForKey(key).get(key))) {
+                uncommited.get().remove(key);
+            } else {
+                String serializedValue = database.serialize(this, value);
+                uncommited.get().put(key, serializedValue);
+            }
+            return oldValue;
+        } finally {
+            lock.readLock().unlock();
         }
-        return oldValue;
     }
 
     @Override
@@ -143,57 +151,73 @@ public class TableHash implements Table{
         if (key == null) {
             throw new IllegalArgumentException("Key is null.");
         }
-        String value = getDATFileForKey(key).get(key);
-        StorableClass oldValue = (StorableClass) get(key);
-        if (value != null) {
-            if (oldValue != null) {
-                uncommited.put(key, null);
+        lock.readLock().lock();
+        try {
+            String value = getDATFileForKey(key).get(key);
+            StorableClass oldValue = (StorableClass) get(key);
+            if (value != null) {
+                if (oldValue != null) {
+                    uncommited.get().put(key, null);
+                }
+            } else {
+                uncommited.get().remove(key);
             }
-        } else {
-            uncommited.remove(key);
+            return oldValue;
+        } finally {
+            lock.readLock().unlock();
         }
-        return oldValue;
     }
 
     @Override
     public int size() {
-        int deletedCount = 0;
-        int addedCount = 0;
-        for (String key : uncommited.keySet()) {
-            String value = uncommited.get(key);
-            if (value == null) {
-                ++deletedCount;
-            } else {
-                if (getDATFileForKey(key).get(key) == null) {
-                    addedCount++;
+        lock.readLock().lock();
+        try {
+            int deletedCount = 0;
+            int addedCount = 0;
+            for (String key : uncommited.get().keySet()) {
+                String value = uncommited.get().get(key);
+                if (value == null) {
+                    ++deletedCount;
+                } else {
+                    if (getDATFileForKey(key).get(key) == null) {
+                        addedCount++;
+                    }
                 }
             }
-        }
-        int result = 0;
-        for (TableFileDAT[] dir : structuredParts) {
-            for (TableFileDAT part : dir) {
-                part.load();
-                result += part.count();
+            int result = 0;
+            for (TableFileDAT[] dir : structuredParts) {
+                for (TableFileDAT part : dir) {
+                    part.load();
+                    result += part.count();
+                }
             }
+            return result + addedCount - deletedCount;
+        } finally {
+            lock.readLock().unlock();
         }
-        return result + addedCount - deletedCount;
     }
 
     @Override
     public int getNumberOfUncommittedChanges() {
-        return uncommited.size();
+        return uncommited.get().size();
     }
 
     @Override
     public int commit() throws IOException {
-        int result = uncommited.size();
-        save();
-        return result;    }
+        lock.writeLock().lock();
+        try {
+            int result = uncommited.get().size();
+            save();
+            return result;
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
 
     @Override
     public int rollback() {
         int result = getNumberOfUncommitedChanges();
-        uncommited.clear();
+        uncommited.get().clear();
         initDATFiles();
         return result;
     }
@@ -218,41 +242,50 @@ public class TableHash implements Table{
         if (key == null) {
             throw new IllegalArgumentException("Key is null.");
         }
+        lock.readLock().lock();
         try {
-            if (uncommited.containsKey(key)) {
-                return database.deserialize(this, uncommited.get(key));
+            if (uncommited.get().containsKey(key)) {
+                return database.deserialize(this, uncommited.get().get(key));
             } else {
                 return database.deserialize(this, getDATFileForKey(key).get(key));
             }
         } catch (ParseException e) {
             return null;
+        } finally {
+            lock.readLock().unlock();
         }
     }
 
+    @Override
     public List<String> list() {
-        ArrayList<String> oldList = new ArrayList<>();
-        for (TableFileDAT[] dir : structuredParts) {
-            for (TableFileDAT part : dir) {
-                part.load();
-                oldList.addAll(part.list());
+        lock.readLock().lock();
+        try {
+            ArrayList<String> oldList = new ArrayList<>();
+            for (TableFileDAT[] dir : structuredParts) {
+                for (TableFileDAT part : dir) {
+                    part.load();
+                    oldList.addAll(part.list());
+                }
             }
+            Set<String> items = new TreeSet<>(oldList);
+            for (String key : uncommited.get().keySet()) {
+                String value = uncommited.get().get(key);
+                if (value == null) {
+                    items.remove(key);
+                } else {
+                    items.add(key);
+                }
+            }
+            final ArrayList<String> result = new ArrayList<>(items.size());
+            items.forEach(new Consumer<String>() {
+                @Override
+                public void accept(String s) {
+                    result.add(s);
+                }
+            });
+            return result;
+        } finally {
+            lock.readLock().unlock();
         }
-        Set<String> items = new TreeSet<>(oldList);
-        for (String key : uncommited.keySet()) {
-            String value = uncommited.get(key);
-            if (value == null) {
-                items.remove(key);
-            } else {
-                items.add(key);
-            }
-        }
-        final ArrayList<String> result = new ArrayList<>(items.size());
-        items.forEach(new Consumer<String>() {
-            @Override
-            public void accept(String s) {
-                result.add(s);
-            }
-        });
-        return result;
     }
 }

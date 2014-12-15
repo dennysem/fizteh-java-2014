@@ -15,8 +15,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Database implements TableProvider {
     private final String signatureFileName = "signature.tsv";
@@ -25,6 +29,8 @@ public class Database implements TableProvider {
     private Map<String, Class<?>> revClassNames;
     private String rootDirectory;
     private Map<String, TableHash> tables = new HashMap<>();
+    private ReadWriteLock lock = new ReentrantReadWriteLock(true);
+
 
     public Database(String path) throws IOException {
         initClassNames();
@@ -43,7 +49,7 @@ public class Database implements TableProvider {
                 File[] subfolders = getTablesFromRoot(root);
                 for (File folder : subfolders) {
                     String name = folder.getName();
-                    Path tableSignature = new File(rootDirectory).toPath().resolve(name
+                    Path tableSignature = Paths.get(rootDirectory).resolve(name
                             + File.separator + signatureFileName);
                     List<Class<?>> signature = readSignature(tableSignature.toFile());
                     TableHash table = new TableHash(this, name, signature);
@@ -141,11 +147,17 @@ public class Database implements TableProvider {
     @Override
     public Table getTable(String name) {
         checkIsNameInvalid(name);
-        if (tables.containsKey(name)) {
-            return tables.get(name);
-        } else {
-            return null;
+        lock.readLock().lock();
+        try {
+            if (tables.containsKey(name)) {
+                return tables.get(name);
+            } else {
+                return null;
+            }
+        } finally {
+            lock.readLock().unlock();
         }
+
     }
 
 
@@ -161,20 +173,25 @@ public class Database implements TableProvider {
         } catch (ColumnFormatException e) {
             throw new IllegalArgumentException(e);
         }
-        if (tables.containsKey(name)) {
-            return null;
-        } else {
-            String tableDirPath = rootDirectory + File.separator + name;
-            File tableDir = new File(tableDirPath);
-            if (!tableDir.mkdir()) {
-                throw new IOException("Can't create this table");
+        lock.writeLock().lock();
+        try {
+            if (tables.containsKey(name)) {
+                return null;
+            } else {
+                String tableDirPath = rootDirectory + File.separator + name;
+                File tableDir = new File(tableDirPath);
+                if (!tableDir.mkdir()) {
+                    throw new IOException("Can't create this table");
+                }
+                File signatureFile = new File(tableDirPath
+                        + File.separator + signatureFileName);
+                writeSignature(signatureFile, columnTypes);
+                TableHash table = new TableHash(this, name, columnTypes);
+                tables.put(name, table);
+                return table;
             }
-            File signatureFile = new File(tableDirPath
-                    + File.separator + signatureFileName);
-            writeSignature(signatureFile, columnTypes);
-            TableHash table = new TableHash(this, name, columnTypes);
-            tables.put(name, table);
-            return table;
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
@@ -182,16 +199,20 @@ public class Database implements TableProvider {
     public void removeTable(String name)
             throws IOException {
         checkIsNameInvalid(name);
-        if (name == null) {
-            throw new IllegalArgumentException("Name is null");
-        }
         TableHash table = (TableHash) getTable(name);
-
-        if (table == null) {
-            throw new IllegalStateException("Table not exist");
+        lock.writeLock().lock();
+        try {
+            if (table == null) {
+                throw new IllegalStateException("Table not exist");
+            }
+            table.drop();
+            tables.remove(name);
+        } catch(IllegalStateException e) {
+            throw new IllegalStateException(e);
         }
-        table.drop();
-        tables.remove(name);
+        finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
@@ -265,19 +286,19 @@ public class Database implements TableProvider {
                         } else if (boolOrNullValue.equals("null")) {
                             values.add(null);
                         } else {
-                            throw new ParseException("it's not possible, but there is a parse error!", 0);
+                            throw new ParseException("It's not possible, but there is a parse error!", 0);
                         }
                         i = nextComma + 1;
                     }
                 }
                 if (values.size() != table.getColumnsCount()) {
-                    throw new ParseException("incompatible sizes of Storeable in the table and json you passed", 0);
+                    throw new ParseException("Incompatible sizes of Storeable in the table and json you passed", 0);
                 }
                 return createFor(table, values);
             } catch (IndexOutOfBoundsException e) {
-                throw new ParseException("can't parse your json", 0);
+                throw new ParseException("Can't parse your json", 0);
             } catch (NumberFormatException e) {
-                throw new ParseException("types incompatibility", 0);
+                throw new ParseException("Types incompatibility", 0);
             }
         }
     }
@@ -314,11 +335,17 @@ public class Database implements TableProvider {
 
     @Override
     public List<String> getTableNames() {
-        List<String> result = new ArrayList<>();
-        for (String name: tables.keySet()) {
-            result.add(name);
+        lock.readLock().lock();
+        try {
+            List<String> result = new ArrayList<>();
+            for (String name : tables.keySet()) {
+                result.add(name);
+            }
+            return result;
         }
-        return result;
+        finally {
+            lock.readLock().lock();
+        }
     }
 
     @Override
