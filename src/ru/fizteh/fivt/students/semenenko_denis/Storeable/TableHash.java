@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 /**
  * Created by denny_000 on 01.12.2014.
  */
-public class TableHash implements Table{
+public class TableHash implements Table {
     protected static final int FILES_COUNT = 16;
     protected static final int SUBDIRECTORIES_COUNT = 16;
     private TableFileDAT[][] structuredParts;
@@ -32,7 +32,7 @@ public class TableHash implements Table{
 
     private List<Class<?>> signature;
 
-    public TableHash(Database parentDatabase,  String name,
+    public TableHash(Database parentDatabase, String name,
                      List<Class<?>> newSignature) {
         initDATFiles();
         tableName = name;

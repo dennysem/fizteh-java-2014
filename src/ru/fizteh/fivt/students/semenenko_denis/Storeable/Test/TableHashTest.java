@@ -192,7 +192,7 @@ public class TableHashTest {
         Assert.assertEquals(Byte.class, fullTable.getColumnType(2));
         Assert.assertEquals(Float.class, fullTable.getColumnType(3));
         Assert.assertEquals(Double.class, fullTable.getColumnType(4));
-        Assert.assertEquals(Boolean.class,  fullTable.getColumnType(5));
+        Assert.assertEquals(Boolean.class, fullTable.getColumnType(5));
         Assert.assertEquals(String.class, fullTable.getColumnType(6));
     }
 

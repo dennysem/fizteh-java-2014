@@ -79,7 +79,6 @@ public class Database implements TableProvider {
     }
 
 
-
     private List<Class<?>> readSignature(File signatureFile)
             throws IOException {
         try (Scanner scanner = new Scanner(signatureFile)) {
@@ -140,7 +139,7 @@ public class Database implements TableProvider {
     }
 
     protected Path getRootDirectoryPath() throws DatabaseFileStructureException {
-        return new File(rootDirectory).toPath();
+        return Paths.get(rootDirectory);
     }
 
 
@@ -207,10 +206,9 @@ public class Database implements TableProvider {
             }
             table.drop();
             tables.remove(name);
-        } catch(IllegalStateException e) {
+        } catch (IllegalStateException e) {
             throw new IllegalStateException(e);
-        }
-        finally {
+        } finally {
             lock.writeLock().unlock();
         }
     }
@@ -342,8 +340,7 @@ public class Database implements TableProvider {
                 result.add(name);
             }
             return result;
-        }
-        finally {
+        } finally {
             lock.readLock().lock();
         }
     }
