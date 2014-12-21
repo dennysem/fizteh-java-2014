@@ -42,94 +42,56 @@ public class StorableMain {
             System.exit(-1);
         }
         new Interpreter(databaseInterpreterState, new Command[]{
-                new Command("put", -1, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        Database database = getDatabase(interpreterState);
-                        putCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
+                new Command("put", -1, (interpreterState, arguments) -> {
+                    Database database = getDatabase(interpreterState);
+                    putCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
+                }),
+                new Command("list", 0, (interpreterState, arguments) -> {
+                    Database database = getDatabase(interpreterState);
+                    listCmd(database, (DatabaseInterpreterState) interpreterState);
+                }),
+                new Command("get", 1, (interpreterState, arguments) -> {
+                    Database database = getDatabase(interpreterState);
+                    getCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
+                }),
+                new Command("remove", 1, (interpreterState, arguments) -> {
+                    remove((DatabaseInterpreterState) interpreterState, arguments);
+                }),
+                new Command("use", 1, (interpreterState, arguments) -> {
+                    Database database = getDatabase(interpreterState);
+                    useCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
+                }),
+                new Command("drop", 1, (interpreterState, arguments) -> {
+                    Database database = getDatabase(interpreterState);
+                    dropCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
+                }),
+                new Command("create", -1, (interpreterState, arguments) -> {
+                    Database database = getDatabase(interpreterState);
+                    try {
+                        createCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
+                    } catch (IOException e) {
+                        throw new LoadOrSaveException(e.getMessage());
                     }
                 }),
-                new Command("list", 0, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        Database database = getDatabase(interpreterState);
-                        listCmd(database, (DatabaseInterpreterState) interpreterState);
-                    }
+                new Command("show", 1, (interpreterState, arguments) -> {
+                    Database database = getDatabase(interpreterState);
+                    showCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
                 }),
-                new Command("get", 1, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        Database database = getDatabase(interpreterState);
-                        getCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
-                    }
+                new Command("commit", 0, (interpreterState, arguments) -> {
+                    Database database = getDatabase(interpreterState);
+                    commitCmd(database, (DatabaseInterpreterState) interpreterState);
                 }),
-                new Command("remove", 1, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        remove((DatabaseInterpreterState) interpreterState, arguments);
-                    }
+                new Command("rollback", 0, (interpreterState, arguments) -> {
+                    Database database = getDatabase(interpreterState);
+                    rollbackCmd(database, (DatabaseInterpreterState) interpreterState);
                 }),
-                new Command("use", 1, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        Database database = getDatabase(interpreterState);
-                        useCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
-                    }
-
+                new Command("size", 0, (interpreterState, arguments) -> {
+                    Database database = getDatabase(interpreterState);
+                    sizeCmd(database, (DatabaseInterpreterState) interpreterState);
                 }),
-                new Command("drop", 1, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        Database database = getDatabase(interpreterState);
-                        dropCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
-                    }
-                }),
-                new Command("create", -1, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        Database database = getDatabase(interpreterState);
-                        try {
-                            createCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
-                        } catch (IOException e) {
-                            throw new LoadOrSaveException(e.getMessage());
-                        }
-                    }
-                }),
-                new Command("show", 1, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        Database database = getDatabase(interpreterState);
-                        showCmd(database, (DatabaseInterpreterState) interpreterState, arguments);
-                    }
-
-                }),
-                new Command("commit", 0, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        Database database = getDatabase(interpreterState);
-                        commitCmd(database, (DatabaseInterpreterState) interpreterState);
-                    }
-                }),
-                new Command("rollback", 0, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        Database database = getDatabase(interpreterState);
-                        rollbackCmd(database, (DatabaseInterpreterState) interpreterState);
-                    }
-                }),
-                new Command("size", 0, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        Database database = getDatabase(interpreterState);
-                        sizeCmd(database, (DatabaseInterpreterState) interpreterState);
-                    }
-                }),
-                new Command("exit", 0, new BiConsumer<InterpreterState, String[]>() {
-                    @Override
-                    public void accept(InterpreterState interpreterState, String[] arguments) {
-                        DatabaseInterpreterState state = (DatabaseInterpreterState) interpreterState;
-                        exitCmd(state);
-                    }
+                new Command("exit", 0, (interpreterState, arguments) -> {
+                    DatabaseInterpreterState state = (DatabaseInterpreterState) interpreterState;
+                    exitCmd(state);
                 })
         }).run(args);
     }
