@@ -4,10 +4,10 @@ import javafx.util.Pair;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.*;
-import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter.Utils;
-import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter.Command;
-import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter.Interpreter;
-import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter.InterpreterState;
+import ru.fizteh.fivt.students.semenenko_denis.Interpreter.Utils;
+import ru.fizteh.fivt.students.semenenko_denis.Interpreter.Command;
+import ru.fizteh.fivt.students.semenenko_denis.Interpreter.Interpreter;
+import ru.fizteh.fivt.students.semenenko_denis.Interpreter.InterpreterState;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -40,7 +40,7 @@ public class StorableMain {
             System.err.println(e.getMessage());
             System.exit(-1);
         }
-        new Interpreter(databaseInterpreterState, new Command[]{
+        new Interpreter(databaseInterpreterState, System.in, System.out, System.err, new Command[]{
                 new Command("put", -1, (interpreterState, arguments) -> {
                     Database database = getDatabase(interpreterState);
                     putCmd(database, (DatabaseInterpreterState) interpreterState, arguments);

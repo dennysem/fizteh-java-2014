@@ -1,21 +1,30 @@
-package ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter;
+package ru.fizteh.fivt.students.semenenko_denis.Interpreter;
 
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.LoadOrSaveException;
 
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.*;
 
 public class Interpreter {
     private static final String PROMPT = "$ ";
     private static final String STATEMENT_DELIMITER = ";";
     private static final String PARAM_REGEXP = "\\S+";
+    private final InputStream in;
+    private final PrintStream out;
+    private final PrintStream err;
 
     private final Map<String, Command> commands;
     private final InterpreterState interpreterState;
 
-    public Interpreter(InterpreterState interpreterState, Command[] commands) {
+    public Interpreter(InterpreterState interpreterState, InputStream in, PrintStream out,
+                       PrintStream err, Command[] commands) {
         if (interpreterState == null || commands == null) {
             throw new IllegalArgumentException("Argument is null");
         }
+        this.in = in;
+        this.out = out;
+        this.err = err;
         this.interpreterState = interpreterState;
         this.commands = new HashMap<>();
         for (Command command : commands) {
@@ -72,7 +81,7 @@ public class Interpreter {
                     command.execute(this.interpreterState, params);
                 } catch (IllegalArgumentException
                         | LoadOrSaveException e) {
-                    System.err.println(e.getMessage());
+                    err.println(e.getMessage());
                     break;
                 }
             }

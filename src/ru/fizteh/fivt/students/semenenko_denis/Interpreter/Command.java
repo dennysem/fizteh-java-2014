@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter;
+package ru.fizteh.fivt.students.semenenko_denis.Interpreter;
 
 import java.util.ArrayList;
 import java.util.List;

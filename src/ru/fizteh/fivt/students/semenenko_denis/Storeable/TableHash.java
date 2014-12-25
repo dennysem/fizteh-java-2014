@@ -17,6 +17,7 @@ import java.util.function.Consumer;
  * Created by denny_000 on 01.12.2014.
  */
 public class TableHash implements Table {
+    private static final String SIGNATURE_FILE_NAME = "signature.tsv";
     protected static final int FILES_COUNT = 16;
     protected static final int SUBDIRECTORIES_COUNT = 16;
     private TableFileDAT[][] structuredParts;
@@ -103,7 +104,8 @@ public class TableHash implements Table {
                     part.drop();
                 }
             }
-            File signature = new File(directory.toString() + File.separator + "signature.tsv");
+            File signature = new File(directory.toString() + File.separator + SIGNATURE_FILE_NAME);
+
             signature.delete();
             if (!directory.delete()) {
                 throw new LoadOrSaveException("Directory can't deleted. Warning: data lost.");

@@ -75,51 +75,43 @@ public class StorableClass implements Storeable {
 
     @Override
     public Integer getIntAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        checkBounds(columnIndex);
-        checkFormat(columnIndex, Integer.class);
-        return (Integer) list.get(columnIndex);
+        return (Integer) assertColumnType(columnIndex, Integer.class);
     }
 
     @Override
     public Long getLongAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        checkBounds(columnIndex);
-        checkFormat(columnIndex, Long.class);
-        return (Long) list.get(columnIndex);
+        return (Long) assertColumnType(columnIndex, Long.class);
     }
 
     @Override
     public Byte getByteAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        checkBounds(columnIndex);
-        checkFormat(columnIndex, Byte.class);
-        return (Byte) list.get(columnIndex);
+        return (Byte) assertColumnType(columnIndex, Byte.class);
     }
 
     @Override
     public Float getFloatAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        checkBounds(columnIndex);
-        checkFormat(columnIndex, Float.class);
-        return (Float) list.get(columnIndex);
+        return (Float) assertColumnType(columnIndex, Float.class);
     }
 
     @Override
     public Double getDoubleAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        checkBounds(columnIndex);
-        checkFormat(columnIndex, Double.class);
-        return (Double) list.get(columnIndex);
+        return (Double) assertColumnType(columnIndex, Double.class);
     }
 
     @Override
     public Boolean getBooleanAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        checkBounds(columnIndex);
-        checkFormat(columnIndex, Boolean.class);
-        return (Boolean) list.get(columnIndex);
+        return (Boolean) assertColumnType(columnIndex, Boolean.class);
     }
 
     @Override
     public String getStringAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
+        return (String) assertColumnType(columnIndex, String.class);
+    }
+
+    private Object assertColumnType(int columnIndex, Class<?> type) {
         checkBounds(columnIndex);
-        checkFormat(columnIndex, String.class);
-        return (String) list.get(columnIndex);
+        checkFormat(columnIndex, type);
+        return list.get(columnIndex);
     }
 }
 

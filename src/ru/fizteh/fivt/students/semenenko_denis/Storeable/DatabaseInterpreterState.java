@@ -4,7 +4,7 @@ import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.DatabaseFileStructureException;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.LoadOrSaveException;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.TableNotFoundException;
-import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter.InterpreterState;
+import ru.fizteh.fivt.students.semenenko_denis.Interpreter.InterpreterState;
 import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.UncommitedChangesException;
 
 /**

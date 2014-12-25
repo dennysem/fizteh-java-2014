@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Database implements TableProvider {
-    private final String signatureFileName = "signature.tsv";
+    private static final String SIGNATURE_FILE_NAME = "signature.tsv";
 
     private Map<Class<?>, String> classNames = new HashMap<>();
     private Map<String, Class<?>> revClassNames;
@@ -49,7 +49,7 @@ public class Database implements TableProvider {
                 for (File folder : subfolders) {
                     String name = folder.getName();
                     Path tableSignature = Paths.get(rootDirectory).resolve(name
-                            + File.separator + signatureFileName);
+                            + File.separator + SIGNATURE_FILE_NAME);
                     List<Class<?>> signature = readSignature(tableSignature.toFile());
                     TableHash table = new TableHash(this, name, signature);
                     tables.put(name, table);
@@ -182,7 +182,7 @@ public class Database implements TableProvider {
                     throw new IOException("Can't create this table");
                 }
                 File signatureFile = new File(tableDirPath
-                        + File.separator + signatureFileName);
+                        + File.separator + SIGNATURE_FILE_NAME);
                 writeSignature(signatureFile, columnTypes);
                 TableHash table = new TableHash(this, name, columnTypes);
                 tables.put(name, table);

@@ -2,7 +2,7 @@ package ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap;
 
 import javafx.util.Pair;
 import ru.fizteh.fivt.storage.strings.TableProviderFactory;
-import ru.fizteh.fivt.students.semenenko_denis.MultiFileHashMap.Interpreter.*;
+import ru.fizteh.fivt.students.semenenko_denis.Interpreter.*;
 
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -12,7 +12,7 @@ public class MultiFileHashMapMain {
         TableProviderFactory databaseFactory = new DatabaseFactory();
         Database db = (Database) databaseFactory.create("fizteh.db.dir");
         DatabaseInterpreterState databaseInterpreterState = new DatabaseInterpreterState(db);
-        new Interpreter(databaseInterpreterState, new Command[]{
+        new Interpreter(databaseInterpreterState, System.in, System.out, System.err, new Command[]{
                 new Command("put", 2, new BiConsumer<InterpreterState, String[]>() {
                     @Override
                     public void accept(InterpreterState interpreterState, String[] arguments) {
