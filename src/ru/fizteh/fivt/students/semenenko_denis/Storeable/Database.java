@@ -37,7 +37,7 @@ public class Database implements TableProvider {
         load();
     }
 
-    protected File getRootDirectory() throws DatabaseFileStructureException {
+    public File getRootDirectory() throws DatabaseFileStructureException {
         return new File(rootDirectory);
     }
 
@@ -137,7 +137,7 @@ public class Database implements TableProvider {
         }
     }
 
-    protected Path getRootDirectoryPath() throws DatabaseFileStructureException {
+    public Path getRootDirectoryPath() throws DatabaseFileStructureException {
         return Paths.get(rootDirectory);
     }
 
